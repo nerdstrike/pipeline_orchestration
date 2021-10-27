@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI
 from typing import List
 
@@ -24,3 +26,19 @@ async def root():
     ).all()
 
     return pipeline_data
+
+
+@app.get("/run_status", response_model=List[pipeline_orchestrator.server.model.AnalysisRun])
+async def runs(state: Optional[str] = None):
+    if state:
+        runs = db_session.query(
+            pipeline_orchestrator.tracking.schema.AnalysisRun
+        ).filter_by(
+            state=state
+        ).all()
+    else:
+        runs = db_session.query(
+            pipeline_orchestrator.tracking.schema.AnalysisRun
+        ).all()
+
+    return runs

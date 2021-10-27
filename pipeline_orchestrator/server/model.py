@@ -12,3 +12,11 @@ class Pipeline(pydantic.BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class AnalysisRun(pydantic.BaseModel):
+    job_descriptor: str
+    state: str
+
+    class Config:
+        orm_mode = True
