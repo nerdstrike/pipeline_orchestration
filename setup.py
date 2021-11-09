@@ -9,7 +9,10 @@ setup(
     author_email='kt19@sanger.ac.uk',
     description='Work allocation and tracking for portable pipelines',
     install_requires=[
+        'databases',
         'pymysql',
+        'aiomysql',
+        'aiosqlite',
         'sqlalchemy',
         'fastapi',
         'ml-warehouse @ git+https://github.com/wtsi-npg/ml-warehouse-python@0.1.0'

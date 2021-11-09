@@ -3,7 +3,7 @@ from sqlalchemy import (
     Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
@@ -97,8 +97,3 @@ class Agent(Base):
     __tablename__ = 'agent'
     agent_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
-
-
-def connect_db(config):
-    engine = sqlalchemy.create_engine(config['url'])
-    return scoped_session(sessionmaker(bind=engine))

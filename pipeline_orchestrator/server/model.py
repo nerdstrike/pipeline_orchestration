@@ -4,7 +4,7 @@ import pydantic
 
 
 class Pipeline(pydantic.BaseModel):
-    id: str
+    pipeline_id: str
     repository_uri: str = pydantic.Field(
         None, title="URI for retrieving the code for the pipeline"
     )

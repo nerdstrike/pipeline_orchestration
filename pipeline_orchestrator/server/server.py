@@ -1,44 +1,49 @@
-from typing import Optional
-
+import databases
 from fastapi import FastAPI
-from typing import List
+from typing import List, Optional
 
 import pipeline_orchestrator.server.model
 from pipeline_orchestrator.server.config import DevConfig
 import pipeline_orchestrator.tracking.schema
+from pipeline_orchestrator.tracking.db import DbAccessor
 
 config = DevConfig
 
-db_session = pipeline_orchestrator.tracking.schema.connect_db({
-    'url': config.DB_URL,
-    'future': True,
-    'check_same_thread': config.SAME_THREAD
-})
+database = databases.Database(config.DB_URL)
+
+db_interface = DbAccessor(database)
 
 
 app = FastAPI()
 
 
-@app.get("/", response_model=List[pipeline_orchestrator.server.model.Pipeline])
-async def root():
-    pipeline_data = db_session.query(
-        pipeline_orchestrator.tracking.schema.Pipeline
-    ).all()
+@app.on_event('startup')
+async def startup():
+    await database.connect()
 
-    return pipeline_data
+
+@app.on_event('shutdown')
+async def shutdown():
+    await database.disconnect()
+
+
+@app.get("/")
+async def root():
+    return {
+        'Hello': 'World'
+    }
+
+
+@app.get("/pipeline", response_model=List[pipeline_orchestrator.server.model.Pipeline])
+async def pipelines():
+    return await db_interface.get_all_pipelines()
+
+
+@app.post("/pipelines")
+async def create_pipeline():
+    return None
 
 
 @app.get("/run_status", response_model=List[pipeline_orchestrator.server.model.AnalysisRun])
 async def runs(state: Optional[str] = None):
-    if state:
-        runs = db_session.query(
-            pipeline_orchestrator.tracking.schema.AnalysisRun
-        ).filter_by(
-            state=state
-        ).all()
-    else:
-        runs = db_session.query(
-            pipeline_orchestrator.tracking.schema.AnalysisRun
-        ).all()
-
-    return runs
+    return await db_interface.get_analysis_runs(state)
