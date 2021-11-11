@@ -71,6 +71,9 @@ class AnalysisRun(Base):
     events = relationship(
         'Event', back_populates='analysis_run'
     )
+    agent = relationship(
+        'Agent', back_populates='analysis_runs'
+    )
 
 
 class Event(Base):
@@ -97,3 +100,7 @@ class Agent(Base):
     __tablename__ = 'agent'
     agent_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
+
+    analysis_runs = relationship(
+        'AnalysisRun'
+    )

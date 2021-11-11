@@ -1,10 +1,10 @@
 import databases
 from fastapi import FastAPI
-from typing import List, Optional
+from starlette import status
+from typing import List, Optional, Dict
 
-import pipeline_orchestrator.server.model
 from pipeline_orchestrator.server.config import DevConfig
-import pipeline_orchestrator.tracking.schema
+from pipeline_orchestrator.server.model import Pipeline, AnalysisRun, WorkRegistrationResult
 from pipeline_orchestrator.tracking.db import DbAccessor
 
 config = DevConfig
@@ -34,7 +34,7 @@ async def root():
     }
 
 
-@app.get("/pipeline", response_model=List[pipeline_orchestrator.server.model.Pipeline])
+@app.get("/pipeline", response_model=List[Pipeline])
 async def pipelines():
     return await db_interface.get_all_pipelines()
 
@@ -44,6 +44,17 @@ async def create_pipeline():
     return None
 
 
-@app.get("/run_status", response_model=List[pipeline_orchestrator.server.model.AnalysisRun])
+@app.get("/run_status", response_model=List[AnalysisRun])
 async def runs(state: Optional[str] = None):
     return await db_interface.get_analysis_runs(state)
+
+
+@app.post(
+    '/{analysis_id}/register_work',
+    status_code=status.HTTP_201_CREATED,
+    response_model=WorkRegistrationResult
+)
+async def create_analysis_run(analysis_id: str, body: Dict, agent_id: Optional[str]):
+    runs = [run for run in body]
+    # Some kind of validation?
+    await db_interface.create_work(analysis_id, agent_id, runs)
