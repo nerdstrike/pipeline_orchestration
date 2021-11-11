@@ -1,28 +1,22 @@
 from fastapi import FastAPI, Depends
 # also ApiRouter to get routes out of here
+
 from starlette import status
 from typing import List, Optional, Dict
 
+from pipeline_orchestrator.version import __version__
 from pipeline_orchestrator.server.model import Pipeline, AnalysisRun, WorkRegistrationResult
 from pipeline_orchestrator.tracking.db import get_DbAccessor
 
 app = FastAPI()
 
 
-# @app.on_event('startup')
-# async def startup():
-#     await engine.connect()
-
-
-# @app.on_event('shutdown')
-# async def shutdown():
-#     await engine.dispose()
-
-
 @app.get("/")
 async def root():
     return {
-        'Hello': 'World'
+        'Hello': 'World',
+        'Service': 'Pipeline Orchestrator',
+        'Version': __version__
     }
 
 
