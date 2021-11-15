@@ -14,7 +14,9 @@ config = DevConfig
 engine = create_async_engine(
     config.DB_URL, future=True
 )
-session_factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+session_factory = sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
 
 
 async def get_DbAccessor():

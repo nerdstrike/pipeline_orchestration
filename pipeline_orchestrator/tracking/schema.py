@@ -92,6 +92,10 @@ class Event(Base):
         'AnalysisRun'
     )
 
+    agent = relationship(
+        'Agent', back_populates='events'
+    )
+
 
 class Agent(Base):
     '''
@@ -103,4 +107,7 @@ class Agent(Base):
 
     analysis_runs = relationship(
         'AnalysisRun'
+    )
+    events = relationship(
+        'Event', back_populates='agent'
     )

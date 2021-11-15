@@ -25,6 +25,7 @@ setup(
         'ml-warehouse @ git+https://github.com/wtsi-npg/ml-warehouse-python@0.1.0'
     ],
     tests_require=[
+        'testfile',
         'pytest',
         'pytest-it'
     ]
