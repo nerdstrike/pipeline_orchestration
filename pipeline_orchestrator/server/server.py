@@ -6,8 +6,7 @@ from typing import List, Optional
 
 from pipeline_orchestrator.version import __version__
 from pipeline_orchestrator.server.model import (
-    Pipeline, AnalysisRun, WorkRegistrationResult,
-    WorkArray
+    Pipeline, AnalysisRun, WorkRegistrationResult, Work
 )
 from pipeline_orchestrator.tracking.db import get_DbAccessor
 
@@ -46,7 +45,7 @@ async def runs(state: Optional[str] = None, db_interface=Depends(get_DbAccessor)
 async def create_analysis_run(
     analysis_id: str,
     agent_id: str,
-    work: WorkArray,
+    work: List[Work],
     db_interface=Depends(get_DbAccessor)
 ):
     # Some kind of validation?
@@ -57,7 +56,7 @@ async def create_analysis_run(
 @app.put(
     '/{analysis_id}/claim_work',
     status_code=status.HTTP_200_OK,
-    response_model=WorkArray
+    response_model=List[Work]
 )
 async def claim_analysis_run(
     analysis_id: str,

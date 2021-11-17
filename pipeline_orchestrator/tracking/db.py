@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from pipeline_orchestrator.server.config import DevConfig
 
@@ -10,7 +10,7 @@ from pipeline_orchestrator.tracking.schema import (
     Agent, Analysis, AnalysisRun, Pipeline
 )
 
-from pipeline_orchestrator.server.model import WorkArray
+from pipeline_orchestrator.server.model import Work
 
 config = DevConfig
 engine = create_async_engine(
@@ -58,7 +58,7 @@ class DbAccessor:
 
         return analysis_runs.scalars().all()
 
-    async def create_run(self, analysis_id: str, agent_id: str, runs: WorkArray):
+    async def create_run(self, analysis_id: str, agent_id: str, runs: List[Work]):
 
         session = self.session
         agent_result = await session.execute(
