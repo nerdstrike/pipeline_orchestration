@@ -124,7 +124,7 @@ class DbAccessor:
 
 
 def create_descriptor(definition: Dict):
-    'Generalise this into a function that turns arbitrary dicts into a unique string'
+    'Get rid of this. This is the responsibility of the "work finder"'
     descriptor = ''
     for thing in ('run', 'lane', 'tag_index'):
         descriptor = ':'.join([descriptor, str(definition[thing])])
