@@ -52,7 +52,7 @@ class AnalysisRun(Base):
     run_id = Column(Integer, primary_key=True, autoincrement=True)
     claimed_by = Column(Integer, ForeignKey('agent.agent_id'))
     analysis_id = Column(Integer, ForeignKey('analysis.analysis_id'))
-    job_descriptor = Column(String)
+    job_descriptor = Column(String, unique=True)
     state = Column(String)
     # prefix is a special property for uniquifying folder names
     # or LSF job names and so on.
