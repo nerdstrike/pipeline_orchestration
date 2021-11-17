@@ -1,17 +1,27 @@
 import pydantic
-
-# FastAPI stuff
+from typing import Any, Dict, List
 
 
 class Pipeline(pydantic.BaseModel):
-    id: str
-    repository_uri: str = pydantic.Field(
-        None, title="URI for retrieving the code for the pipeline"
+    pipeline_id: str = pydantic.Field(
+        None, title='Unique identifier for a pipeline/version combination'
     )
-    version: str
+    repository_uri: str = pydantic.Field(
+        None, title='URI for retrieving the code for the pipeline'
+    )
+    version: str = pydantic.Field(
+        None, title='The version string for the pipeline'
+    )
 
     class Config:
         orm_mode = True
+        schema_extra = {
+            'example': {
+                'pipeline_id': '1',
+                'repository_uri': 'https://pipeline.example/code.git',
+                'version': '1.2.3'
+            }
+        }
 
 
 class AnalysisRun(pydantic.BaseModel):
@@ -20,3 +30,39 @@ class AnalysisRun(pydantic.BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class Work(pydantic.BaseModel):
+    definition: Dict[str, Any] = pydantic.Field(
+        None, title='Defining the unique properties for this work'
+    )
+    info: Dict[str, Any] = pydantic.Field(
+        None, title='Supporting information for this particular unit of work'
+    )
+
+    class Config:
+        schema_extra = {
+            'example': {
+                'definition': {
+                    'run': 1234,
+                    'lane': 5,
+                    'tag_index': 6
+                },
+                'info': {
+                    'species': 'Homo Sapiens',
+                    'library_type': 'cell partitioned RNA expression'
+                }
+            }
+        }
+
+
+class WorkRegistrationResult(pydantic.BaseModel):
+    created: List[Work] = pydantic.Field(
+        [], title='A list of work units created in the operation'
+    )
+    errored: List[str] = pydantic.Field(
+        [], title='Failed items that were not registered for some reason'
+    )
+    preexisting: List[Work] = pydantic.Field(
+        [], title='Items that were not created because they already exist'
+    )

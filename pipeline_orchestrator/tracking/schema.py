@@ -1,9 +1,9 @@
 import sqlalchemy
 from sqlalchemy import (
-    Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
+    Column, ForeignKey, Integer, String, DateTime, UniqueConstraint, PickleType
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship
+from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
@@ -52,7 +52,11 @@ class AnalysisRun(Base):
     run_id = Column(Integer, primary_key=True, autoincrement=True)
     claimed_by = Column(Integer, ForeignKey('agent.agent_id'))
     analysis_id = Column(Integer, ForeignKey('analysis.analysis_id'))
-    job_descriptor = Column(String)
+    job_descriptor = Column(String, unique=True)
+    # definition is the serialisation of Dict representing the JSON
+    # provided by the workflow - we don't want to get into serialising
+    # and deserialising from job_descriptor above, so we keep the original
+    definition = Column(PickleType)
     state = Column(String)
     # prefix is a special property for uniquifying folder names
     # or LSF job names and so on.
@@ -70,6 +74,9 @@ class AnalysisRun(Base):
     )
     events = relationship(
         'Event', back_populates='analysis_run'
+    )
+    agent = relationship(
+        'Agent', back_populates='analysis_runs'
     )
 
 
@@ -89,6 +96,10 @@ class Event(Base):
         'AnalysisRun'
     )
 
+    agent = relationship(
+        'Agent', back_populates='events'
+    )
+
 
 class Agent(Base):
     '''
@@ -98,7 +109,9 @@ class Agent(Base):
     agent_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
 
-
-def connect_db(config):
-    engine = sqlalchemy.create_engine(config['url'])
-    return scoped_session(sessionmaker(bind=engine))
+    analysis_runs = relationship(
+        'AnalysisRun'
+    )
+    events = relationship(
+        'Event', back_populates='agent'
+    )
