@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from typing import List, Optional, Dict
+from typing import Optional, Dict
 
 from pipeline_orchestrator.server.config import DevConfig
 
@@ -10,7 +10,7 @@ from pipeline_orchestrator.tracking.schema import (
     Agent, Analysis, AnalysisRun, Pipeline
 )
 
-from pipeline_orchestrator.server.model import WorkArray, Work
+from pipeline_orchestrator.server.model import WorkArray
 
 config = DevConfig
 engine = create_async_engine(
@@ -79,6 +79,7 @@ class DbAccessor:
                 agent=agent,
                 analysis=analysis,
                 job_descriptor=definition,
+                definition=run,
                 state='READY'
             )
             session.add(analysis_run)
@@ -91,29 +92,39 @@ class DbAccessor:
             'preexisting': []
         }
 
-    async def claim_run(self, agent_id: int, analysis_id: int, claim_limit: Optional[int] = 1):
+    async def claim_runs(
+        self, agent_id: int, analysis_id: int, claim_limit: Optional[int] = 1
+    ):
         session = self.session
 
-        agent = await session.execute(
+        agent_result = await session.execute(
             select(Agent)
-            .where(agent_id=agent_id)
-        ).scalar_one()
+            .filter_by(agent_id=agent_id)
+        )
+        agent = agent_result.scalar_one()
 
         potential_runs = await session.execute(
             select(AnalysisRun)
-            .where(analysis=analysis_id)
+            .filter_by(analysis_id=analysis_id)
             .filter_by(state='READY')
-        ).limit(claim_limit)
+            .limit(claim_limit)
+        )
 
         runs = potential_runs.scalars().all()
         for run in runs:
-            run.claimed_by(agent)
-            run.state('CLAIMED')
+            run.agent = agent
+            run.state = 'CLAIMED'
 
-        return runs
+        await session.commit()
+
+        work = []
+        for run in runs:
+            work.append(run.definition)
+        return work
 
 
 def create_descriptor(definition: Dict):
+    'Generalise this into a function that turns arbitrary dicts into a unique string'
     descriptor = ''
     for thing in ('run', 'lane', 'tag_index'):
         descriptor = ':'.join([descriptor, str(definition[thing])])

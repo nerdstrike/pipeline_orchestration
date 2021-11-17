@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import (
-    Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
+    Column, ForeignKey, Integer, String, DateTime, UniqueConstraint, PickleType
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -53,6 +53,10 @@ class AnalysisRun(Base):
     claimed_by = Column(Integer, ForeignKey('agent.agent_id'))
     analysis_id = Column(Integer, ForeignKey('analysis.analysis_id'))
     job_descriptor = Column(String, unique=True)
+    # definition is the serialisation of Dict representing the JSON
+    # provided by the workflow - we don't want to get into serialising
+    # and deserialising from job_descriptor above, so we keep the original
+    definition = Column(PickleType)
     state = Column(String)
     # prefix is a special property for uniquifying folder names
     # or LSF job names and so on.

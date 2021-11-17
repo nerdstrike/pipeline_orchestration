@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 # also ApiRouter to get routes out of here
 
 from starlette import status
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from pipeline_orchestrator.version import __version__
 from pipeline_orchestrator.server.model import (
@@ -52,3 +52,19 @@ async def create_analysis_run(
     # Some kind of validation?
     results = await db_interface.create_run(analysis_id, agent_id, work)
     return results
+
+
+@app.put(
+    '/{analysis_id}/claim_work',
+    status_code=status.HTTP_200_OK,
+    response_model=WorkArray
+)
+async def claim_analysis_run(
+    analysis_id: str,
+    agent_id: str,
+    max_items: Optional[int] = 1,
+    db_interface=Depends(get_DbAccessor)
+):
+    work = await db_interface.claim_runs(agent_id, analysis_id, max_items)
+    print(work)
+    return work
