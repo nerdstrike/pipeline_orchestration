@@ -66,3 +66,18 @@ class WorkRegistrationResult(pydantic.BaseModel):
     preexisting: List[Work] = pydantic.Field(
         [], title='Items that were not created because they already exist'
     )
+
+
+class WorkArray(pydantic.BaseModel):
+    __root__: List[Work] = pydantic.Field(
+        [], title='A list of Work descriptions to be run'
+    )
+    # These are necessary because a bare list in JSON is
+    # uncommon and the handling in fastapi/pydantic is
+    # not available by default
+
+    def __iter__(self):
+        return iter(self.__root__)
+
+    def __getitem__(self, item):
+        return self.__root__[item]

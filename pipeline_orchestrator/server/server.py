@@ -5,7 +5,10 @@ from starlette import status
 from typing import List, Optional, Dict
 
 from pipeline_orchestrator.version import __version__
-from pipeline_orchestrator.server.model import Pipeline, AnalysisRun, WorkRegistrationResult
+from pipeline_orchestrator.server.model import (
+    Pipeline, AnalysisRun, WorkRegistrationResult,
+    WorkArray
+)
 from pipeline_orchestrator.tracking.db import get_DbAccessor
 
 app = FastAPI()
@@ -40,7 +43,12 @@ async def runs(state: Optional[str] = None, db_interface=Depends(get_DbAccessor)
     status_code=status.HTTP_201_CREATED,
     response_model=WorkRegistrationResult
 )
-async def create_analysis_run(analysis_id: str, body: Dict, agent_id: Optional[str], db_interface=Depends(get_DbAccessor)):
-    runs = [run for run in body]
+async def create_analysis_run(
+    analysis_id: str,
+    agent_id: str,
+    work: WorkArray,
+    db_interface=Depends(get_DbAccessor)
+):
     # Some kind of validation?
-    await db_interface.create_work(analysis_id, agent_id, runs)
+    results = await db_interface.create_run(analysis_id, agent_id, work)
+    return results
