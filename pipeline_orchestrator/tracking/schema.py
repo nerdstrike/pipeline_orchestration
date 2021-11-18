@@ -16,8 +16,8 @@ class Pipeline(Base):
     __tablename__ = 'pipeline'
     pipeline_id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)
-    repository_uri = Column(String)
-    version = Column(String)
+    repository_uri = Column(String(length=256))
+    version = Column(String(length=256))
 
     UniqueConstraint('repository_uri', 'version', name='unique_pipeline')
 
@@ -32,9 +32,9 @@ class Analysis(Base):
     __tablename__ = 'analysis'
     analysis_id = Column(Integer, primary_key=True, autoincrement=True)
     pipeline_id = Column(Integer, ForeignKey('pipeline.pipeline_id'))
-    work_detector = Column(String)
-    outcome = Column(String)
-    state = Column(String)
+    work_detector = Column(String(length=256))
+    outcome = Column(String(length=256))
+    state = Column(String(length=256))
 
     analysis_runs = relationship(
         'AnalysisRun', back_populates='analysis'
@@ -52,15 +52,15 @@ class AnalysisRun(Base):
     run_id = Column(Integer, primary_key=True, autoincrement=True)
     claimed_by = Column(Integer, ForeignKey('agent.agent_id'))
     analysis_id = Column(Integer, ForeignKey('analysis.analysis_id'))
-    job_descriptor = Column(String, unique=True)
+    job_descriptor = Column(String(length=256), unique=True)
     # definition is the serialisation of Dict representing the JSON
     # provided by the workflow - we don't want to get into serialising
     # and deserialising from job_descriptor above, so we keep the original
     definition = Column(PickleType)
-    state = Column(String)
+    state = Column(String(length=256))
     # prefix is a special property for uniquifying folder names
     # or LSF job names and so on.
-    prefix = Column(String)
+    prefix = Column(String(length=100))
 
     UniqueConstraint('analysis_id', 'job_descriptor', name='unique_work')
     # sample = Column(Integer)
@@ -90,7 +90,7 @@ class Event(Base):
     analysis_run_id = Column(Integer, ForeignKey('analysis_run.run_id'))
     time = Column(DateTime, default=sqlalchemy.sql.functions.now())
     set_by = Column(Integer, ForeignKey('agent.agent_id'))
-    change = Column(String)
+    change = Column(String(length=256))
 
     analysis_run = relationship(
         'AnalysisRun'
@@ -107,7 +107,7 @@ class Agent(Base):
     '''
     __tablename__ = 'agent'
     agent_id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name = Column(String(length=256))
 
     analysis_runs = relationship(
         'AnalysisRun'
