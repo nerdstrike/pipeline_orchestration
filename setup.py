@@ -18,7 +18,7 @@ setup(
         'aiomysql',
         'aiosqlite',
         'fastapi',
-        'pymysql',
+        'pymysql=="0.8.1"',
         'sqlalchemy',
         'ujson',
         'ml-warehouse @ git+https://github.com/wtsi-npg/ml-warehouse-python@0.1.0'
