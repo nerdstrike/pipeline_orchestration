@@ -8,9 +8,16 @@ from pipeline_orchestrator.version import __version__
 from pipeline_orchestrator.server.model import (
     Pipeline, AnalysisRun, WorkRegistrationResult, Work
 )
-from pipeline_orchestrator.tracking.db import get_DbAccessor
+from pipeline_orchestrator.tracking.db import session_factory, DbAccessor
 
 app = FastAPI()
+
+
+async def get_DbAccessor():
+    'Provides a hook for fastapi to Depend on a live session on each route'
+    async with session_factory() as session:
+        async with session.begin():
+            yield DbAccessor(session)
 
 
 @app.get("/")
@@ -65,5 +72,4 @@ async def claim_analysis_run(
     db_interface=Depends(get_DbAccessor)
 ):
     work = await db_interface.claim_runs(agent_id, analysis_id, max_items)
-    print(work)
     return work

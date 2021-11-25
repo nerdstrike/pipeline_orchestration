@@ -17,7 +17,6 @@ setup(
     install_requires=[
         'aiomysql',
         'aiosqlite',
-        'databases',
         'fastapi',
         'pymysql',
         'sqlalchemy',

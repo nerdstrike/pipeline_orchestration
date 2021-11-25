@@ -3,7 +3,9 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_scoped_session
+from sqlalchemy.ext.asyncio import (
+    AsyncSession, create_async_engine, async_scoped_session
+)
 from typing import Optional, Dict, List
 
 from pipeline_orchestrator.tracking.schema import (
@@ -25,13 +27,6 @@ session_factory = async_scoped_session(
     ),
     scopefunc=asyncio.current_task
 )
-
-
-async def get_DbAccessor():
-    'Provides a hook for fastapi to Depend on a live session on each route'
-    async with session_factory() as session:
-        async with session.begin():
-            yield DbAccessor(session)
 
 
 class DbAccessor:
