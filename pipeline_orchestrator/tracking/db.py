@@ -1,23 +1,29 @@
+import asyncio
 import logging
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_scoped_session
 from typing import Optional, Dict, List
-
-from pipeline_orchestrator.server.config import DevConfig
 
 from pipeline_orchestrator.tracking.schema import (
     Agent, Analysis, AnalysisRun, Pipeline
 )
 
 from pipeline_orchestrator.server.model import Work
+from pipeline_orchestrator.server.config import DevConfig
 
 config = DevConfig
+
 engine = create_async_engine(
-    config.DB_URL, future=True
+    config.DB_URL, future=True, pool_size=4
 )
-session_factory = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
+
+session_factory = async_scoped_session(
+    sessionmaker(
+        bind=engine, expire_on_commit=False, class_=AsyncSession
+    ),
+    scopefunc=asyncio.current_task
 )
 
 
@@ -103,23 +109,35 @@ class DbAccessor:
         )
         agent = agent_result.scalar_one()
 
-        potential_runs = await session.execute(
-            select(AnalysisRun)
-            .filter_by(analysis_id=analysis_id)
-            .filter_by(state='READY')
-            .limit(claim_limit)
-        )
+        try:
+            to_claim = await session.execute(
+                select(AnalysisRun)
+                .filter_by(analysis_id=analysis_id)
+                .filter_by(state='READY')
+                .filter_by(claimed_by=None)
+                .with_for_update()
+                .limit(claim_limit)
+                .execution_options(populate_existing=True)
+            )
+        except NoResultFound:
+            print("Whoopsie. No runs in READY state")
+            return []
 
-        runs = potential_runs.scalars().all()
-        for run in runs:
-            run.agent = agent
-            run.state = 'CLAIMED'
+        runs = to_claim.scalars().all()
+        # savepoint = session.begin_nested()
+        try:
+            for run in runs:
+                run.agent = agent
+                run.state = 'CLAIMED'
 
-        await session.commit()
+            await session.commit()
+        except IntegrityError as e:
+            print(e)
+            session.rollback()
 
         work = []
         for run in runs:
-            work.append(run.definition)
+            work.append({'definition': run.definition, 'info': None})
         return work
 
 
