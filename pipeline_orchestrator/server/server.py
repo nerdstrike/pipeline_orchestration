@@ -14,7 +14,11 @@ app = FastAPI()
 
 
 async def get_DbAccessor():
-    'Provides a hook for fastapi to Depend on a live session on each route'
+    '''
+    Provides a hook for fastapi to Depend on a live session on each route.
+    Think very hard before moving this code, and check for race conditions
+    on DB updates. All sorts of strange session scoping risks.
+    '''
     async with session_factory() as session:
         async with session.begin():
             yield DbAccessor(session)
