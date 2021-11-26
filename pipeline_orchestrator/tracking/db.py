@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
 from typing import Optional, Dict, List
 
 from pipeline_orchestrator.tracking.schema import (
-    Agent, Analysis, AnalysisRun, Pipeline
+    Agent, Analysis, AnalysisRun, Pipeline, Event
 )
 
 from pipeline_orchestrator.server.model import Work
@@ -109,7 +109,7 @@ class DbAccessor:
                 select(AnalysisRun)
                 .filter_by(analysis_id=analysis_id)
                 .filter_by(state='READY')
-                .filter_by(claimed_by=None)
+                # .filter_by(claimed_by=None) Goes faster without this redundant safety
                 .with_for_update()
                 .limit(claim_limit)
                 .execution_options(populate_existing=True)
@@ -124,6 +124,8 @@ class DbAccessor:
             for run in runs:
                 run.agent = agent
                 run.state = 'CLAIMED'
+                event = Event(change='Run claimed', agent=agent, analysis_run=run)
+                session.add(event)
 
             await session.commit()
         except IntegrityError as e:
